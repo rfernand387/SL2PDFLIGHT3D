@@ -15,6 +15,7 @@ Law.Rel_Azimuth=Law.Sun_Azimuth-Law.View_Azimuth; % Azimuth relatif
 Coef_Spe = coefspe; % chargement des coefs specifiques de PROSPECT
 Sol_Irr=irradiance(0:5:75,400:2400,0.23,0.25); % la LUT pour l'éclairement solaire entre 0° et 75°
 Law.Cw=Law.Cdm./(1-Law.Cw_Rel); % on créé la variable Cw
+C = computer ;
 
 %% cluster laws to identify blocks of input for training
 if (Debug)
@@ -81,7 +82,7 @@ if (Debug)
     disp(['Simulating ' num2str(Nb_Sims) ' cases for Class ' num2str(Class)])
 end
 lambdaref = 799;
-parfor isim= 1:Nb_Sims % boucle sur les simulations
+for isim= 1:Nb_Sims % boucle sur les simulations
     if strcmp(Def_Base.RTM,'sail3')
         
         %  propriétés des feuilles et du sol
@@ -132,8 +133,13 @@ parfor isim= 1:Nb_Sims % boucle sur les simulations
         templatedir = '.\code\FLIGHTREVERSE';
         targetdirmaster = '.\code\FLIGHTTARGET0';
         targetdir = [targetdirmaster,num2str(isim)];
-        mkdir([targetdir]);
-        system(['xcopy ',templatedir,' ',targetdir,'  /e /q']);
+        if ( strcmp(C,'win64'))
+            mkdir([targetdir]);
+            system(['xcopy ',templatedir,' ',targetdir,'  /e /q']);
+        else
+            [status,result] = unix(['cp -R',templatedir,' ',targetdir]);
+        end
+        
         
         %  Reflectance top of canopy done in three stages due to FLIGHT
         [ R((400:600)-399,:) D(isim,1) ] = doflightr1d(targetdir,400:600,lambdaref,Law.N(isim),Law.Cab(isim),Car,Ant,Law.Cbp(isim),Law.Cw(isim),Law.Cdm(isim), ...
@@ -178,9 +184,14 @@ parfor isim= 1:Nb_Sims % boucle sur les simulations
         Albedo(isim,1) = sum(R(:,3).*Ecl)/sum(Ecl); % intégration spectrale
         
         % clean up temporary directories
-        delete([targetdir,'\*.*']);
-        delete([targetdir,'\DATA\*.*']);
-        delete([targetdir,'\SPEC\*.*']);
+
+        if ( strcmp(C,'win64'))
+            delete([targetdir,'\*.*']);
+            delete([targetdir,'\DATA\*.*']);
+            delete([targetdir,'\SPEC\*.*']);
+        else
+            [status,result] = unix(['rm -r ',targetdir]);
+        end
         
     elseif strcmp(Def_Base.RTM,'FLIGHT')
         
@@ -196,8 +207,20 @@ parfor isim= 1:Nb_Sims % boucle sur les simulations
         targetdirmaster = '.\code\FLIGHTTARGET80';
         targetdir = [targetdirmaster,num2str(isim)];
         mkdir([targetdir]);
-        system(['xcopy ',templatedir,' ',targetdir,'  /e /q']);
-        
+
+         if ( strcmp(C,'win64'))
+            try 
+                system(['xcopy ',templatedir,' ',targetdir,'  /e /q']);
+            catch
+            disp([targetdir ' could not be copied ']);
+            end
+        else
+            try 
+                [status,result] = unix(['rm -R ',templatedir,' ',targetdir]);
+            catch
+            disp([targetdir ' could not be copied']);
+            end
+        end       
         %  Reflectance top of canopy done in  stages due to FLIGHT
         [ R((400:999)-399,:) D(isim,1) ] = doflight(targetdir,400:999,lambdaref,Law.N(isim),Law.Cab(isim),Car,Ant,Law.Cbp(isim),Law.Cw(isim),Law.Cdm(isim),...
                                                     Law.ALA(isim),LIDFb,Law.LAI(isim),Law.HsD(isim),Law.Crown_Cover(isim),...
@@ -242,12 +265,21 @@ parfor isim= 1:Nb_Sims % boucle sur les simulations
         Albedo(isim,1) = sum(R(:,3).*Ecl)/sum(Ecl); % intégration spectrale
         
         % clean up temporary directories
-        try {
+        if ( strcmp(C,'win64'))
+            try 
                 rmdir(targetdir,'s')
-                }
-        catch
+            catch
             disp([targetdir ' could not be removed ']);
+            end
+        else
+            try 
+                [status,result] = unix(['rm -r ',targetdir]);
+            catch
+            disp([targetdir ' could not be removed ']);
+            end
         end
+        
+        
     else % PROSAIL assumed
         %  propriétés des feuilles et du sol
         Rs = repmat(Law.Bs(isim)*Def_Base.(['Class_' num2str(Class)]).R_Soil.Refl(51:2051,Law.I_Soil(isim)),1,4); %  Réflectance du sol dans le cas lambertien
