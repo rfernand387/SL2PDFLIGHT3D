@@ -82,7 +82,7 @@ if (Debug)
     disp(['Simulating ' num2str(Nb_Sims) ' cases for Class ' num2str(Class)])
 end
 lambdaref = 799;
-for isim= 1:Nb_Sims % boucle sur les simulations
+parfor isim= 1:Nb_Sims % boucle sur les simulations
     if strcmp(Def_Base.RTM,'sail3')
         
         %  propriétés des feuilles et du sol
@@ -208,7 +208,7 @@ for isim= 1:Nb_Sims % boucle sur les simulations
         targetdir = [targetdirmaster,num2str(isim)];
         mkdir([targetdir]);
 
-         if ( strcmp(C,'win64'))
+         if ( strcmp(C,'PCWIN64'))
             try 
                 system(['xcopy ',templatedir,' ',targetdir,'  /e /q']);
             catch
