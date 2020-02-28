@@ -204,7 +204,7 @@ parfor isim= 1:Nb_Sims % boucle sur les simulations
         
         % point to flight directories and makre a temporary targetdir
         templatedir = '.\code\FLIGHTFORWARD3D';
-        targetdirmaster = '.\code\FLIGHTTARGET80';
+        targetdirmaster = '.\code\FLIGHTTARGET20';
         targetdir = [targetdirmaster,num2str(isim)];
         mkdir([targetdir]);
 

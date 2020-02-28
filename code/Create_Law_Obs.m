@@ -108,7 +108,7 @@ switch  Def_Base.Obs.Configur % cas ou on ne considere qu'une seule condition d'
             else
                 Lat_Lon_Initial=0;
             end
-
+            
             parfor i_cas = 1:Nb_Sims %% Orbito
                 
                 %%% On élimine les angles solaires supérieurs à 70°

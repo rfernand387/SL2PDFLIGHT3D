@@ -63,11 +63,7 @@ Def_Base.(['Class_' num2str(Class)]).Mismatch_Filtering=char(y);
 
 
 %% Les autres variables
-%if strcmpi('TOC',Def_Base.Toc_Toa)
- %   [x,y]= xlsread([Def_Base.File_XLS '.xls'],['Canopy_Atmos_Class_' num2str(Class)],'C2:O12');
-%else
-    [x,y]= xlsread([Def_Base.File_XLS '.xls'],['Canopy_Atmos_Class_' num2str(Class)],'C2:O16');
-%end
+[x,y]= xlsread([Def_Base.File_XLS '.xls'],['Canopy_Atmos_Class_' num2str(Class)],'C2:O16');
 for ivar=1:size(x,1)
     for i_Champ=1:size(Champ,2)
         Def_Base.(['Class_' num2str(Class)]).Var_in.(Var{ivar}).(Champ{i_Champ})= x(ivar,i_Champ);
@@ -80,4 +76,26 @@ for ivar=1:size(x,1)
     Def_Base.(['Class_' num2str(Class)]).Var_in.(Var{ivar}).min=[x(ivar,8) x(ivar,10)];
     Def_Base.(['Class_' num2str(Class)]).Var_in.(Var{ivar}).max=[x(ivar,9) x(ivar,11)];
 end    
+
+%% Read FLIGHT paraneters if required
+if ( strcmp(Def_Base.RTM,'FLIGHT') )
+    ChampNum = {'Age_LB','Age_UB','Age_P1','Age_P2',...
+        'S_LB','S_UB','S_P1','S_P2','rl_LB','rl_UB','rl_P1','rl_P2',...
+        'gamma_LB','gamma_UB','gamma_P1','gamma_P2','fbark_LB','fbark_UB','fbark_P1','fbark_P2', ...
+        'fsen_LB','fsen_UB','fsen_P1','fsen_P2','H_LB','H_UB','H_a0','H_a1','H_a2','H_a3','H_a4','sigma_H','H_model', ...
+        'dbh_LB','dbh_UB','dbh_b0','dbh_b1','dbh_b2','dbh_model','rxy_LB','rxy_UB','rxy_c0','rxy_c1','rxy_model','rz_d0','rz_d1','LAI_min','LAI_max'};
+    ChampTxt = {'Age_Distn','S_Distn','rl_Distn','gamma_Distn','fbark_Distn', 'fsen_Distn' }; 
+    numericindices = [3,4,5,6,8,9,10,11,13,14,15,16,18,19,20,21,23,24,25,26,28,29,30,31,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56]-2;
+    textindices = [1,6,11,16,21,26];
+    [x,y,z]= xlsread([Def_Base.File_XLS '.xls'],['FLIGHT_Class_' num2str(Class)],'c2:bd40');
+    for ivar = 1:size(y,1)
+        for i_champ = 1:length(numericindices)
+            Def_Base.(['Class_' num2str(Class)]).FLIGHT(ivar).(ChampNum{i_champ})= x(ivar,numericindices(i_champ));
+        end
+        for i_champ = 1:length(textindices)
+            Def_Base.(['Class_' num2str(Class)]).FLIGHT(ivar).(ChampTxt{i_champ})= char(y(ivar,textindices(i_champ)));
+        end
+        
+    end
+end
 return
